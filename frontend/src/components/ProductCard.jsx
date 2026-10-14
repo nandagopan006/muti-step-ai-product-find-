@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-
 function formatPrice(amount) {
   if (typeof amount !== 'number' || isNaN(amount)) {
     return 'Price on request';
@@ -8,7 +7,12 @@ function formatPrice(amount) {
   return `₹${amount.toLocaleString('en-IN')}`;
 }
 
-export default function ProductCard({ product }) {
+export default function ProductCard({
+  product,
+  onOpenDetails,
+  isFavorite = false,
+  onToggleFavorite,
+}) {
   const [imageError, setImageError] = useState(false);
 
   if (!product) return null;
@@ -19,6 +23,8 @@ export default function ProductCard({ product }) {
     brand,
     category,
     price,
+    rating,
+    in_stock,
     description,
     image_url,
     specs = {},
@@ -31,7 +37,7 @@ export default function ProductCard({ product }) {
 
   return (
     <article className="product-card" id={`product-${id}`}>
-      <div className="product-image-container">
+      <div className="product-image-container" onClick={() => onOpenDetails?.(product)}>
         {!imageError && image_url ? (
           <img
             src={image_url}
@@ -45,15 +51,47 @@ export default function ProductCard({ product }) {
             <span>{category ? `${category.toUpperCase()}` : 'PRODUCT'}</span>
           </div>
         )}
+
+        {/* Favorite Bookmark Toggle Button */}
+        <button
+          className={`card-favorite-btn ${isFavorite ? 'favorited' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite?.(product);
+          }}
+          title={isFavorite ? 'Remove from favorites' : 'Save to favorites'}
+          aria-label={isFavorite ? 'Remove from favorites' : 'Save to favorites'}
+        >
+          {isFavorite ? '❤️' : '🤍'}
+        </button>
+
+        {in_stock !== undefined && (
+          <span className={`stock-badge ${in_stock ? 'in-stock' : 'out-of-stock'}`}>
+            {in_stock ? 'In Stock' : 'Out of Stock'}
+          </span>
+        )}
       </div>
 
       <div className="product-card-body">
         <div className="product-meta-row">
-          {brand && <span className="product-brand">{brand}</span>}
-          {category && <span className="product-category-badge">{category}</span>}
+          <div className="meta-left">
+            {brand && <span className="product-brand">{brand}</span>}
+            {category && <span className="product-category-badge">{category}</span>}
+          </div>
+          {rating && (
+            <span className="product-rating-badge" title={`Customer Rating: ${rating}/5`}>
+              ★ {rating.toFixed(1)}
+            </span>
+          )}
         </div>
 
-        <h3 className="product-title">{title}</h3>
+        <h3
+          className="product-title clickable"
+          onClick={() => onOpenDetails?.(product)}
+          title="Click to view full specs"
+        >
+          {title}
+        </h3>
 
         <div className="product-price">{formatPrice(price)}</div>
 
@@ -61,13 +99,22 @@ export default function ProductCard({ product }) {
 
         {specItems.length > 0 && (
           <div className="product-specs">
-            {specItems.map(([key, val]) => (
+            {specItems.slice(0, 4).map(([key, val]) => (
               <span key={key} className="spec-badge">
                 <strong>{key}:</strong> {String(val)}
               </span>
             ))}
           </div>
         )}
+
+        <div className="product-card-footer">
+          <button
+            className="btn-quick-view"
+            onClick={() => onOpenDetails?.(product)}
+          >
+            View Details 🔍
+          </button>
+        </div>
       </div>
     </article>
   );
