@@ -7,10 +7,13 @@ import EmptyState from './components/EmptyState';
 import ErrorAlert from './components/ErrorAlert';
 import ProductDetailModal from './components/ProductDetailModal';
 import FavoritesModal from './components/FavoritesModal';
+import CompareBar from './components/CompareBar';
+import ComparisonModal from './components/ComparisonModal';
 import { searchProducts } from './services/api';
 
 const RECENT_SEARCHES_KEY = 'ai_recent_searches';
 const FAVORITES_KEY = 'ai_favorite_products';
+const MAX_COMPARE = 4;
 
 export default function App() {
   const [query, setQuery] = useState('');
@@ -23,6 +26,12 @@ export default function App() {
   // Modals & User Preferences
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+
+  // Product Comparison state
+  const [comparedProducts, setComparedProducts] = useState([]);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+
+  const comparedProductIds = new Set(comparedProducts.map((p) => p.id));
 
   // Recent Searches state
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -96,6 +105,28 @@ export default function App() {
 
   const handleClearAllFavorites = () => {
     setFavorites([]);
+  };
+
+  // --- Comparison Handlers ---
+  const handleToggleCompare = (product) => {
+    setComparedProducts((prev) => {
+      const exists = prev.some((p) => p.id === product.id);
+      if (exists) {
+        return prev.filter((p) => p.id !== product.id);
+      }
+      if (prev.length >= MAX_COMPARE) {
+        return prev; // Silently cap at max
+      }
+      return [...prev, product];
+    });
+  };
+
+  const handleRemoveFromCompare = (productId) => {
+    setComparedProducts((prev) => prev.filter((p) => p.id !== productId));
+  };
+
+  const handleClearCompare = () => {
+    setComparedProducts([]);
   };
 
   // Executes the search against the backend API
@@ -173,6 +204,8 @@ export default function App() {
             onOpenDetails={(p) => setSelectedProduct(p)}
             favoriteIds={favoriteIds}
             onToggleFavorite={handleToggleFavorite}
+            comparedProductIds={comparedProductIds}
+            onToggleCompare={handleToggleCompare}
           />
         </>
       )}
@@ -197,6 +230,26 @@ export default function App() {
         onRemoveFavorite={handleRemoveFavorite}
         onClearAll={handleClearAllFavorites}
         onSelectProduct={(p) => setSelectedProduct(p)}
+      />
+
+      {/* Floating Compare Bar */}
+      <CompareBar
+        comparedProducts={comparedProducts}
+        onOpenModal={() => setIsComparisonOpen(true)}
+        onRemoveItem={handleRemoveFromCompare}
+        onClearAll={handleClearCompare}
+      />
+
+      {/* Side-by-Side Comparison Modal */}
+      <ComparisonModal
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+        products={comparedProducts}
+        onRemoveProduct={handleRemoveFromCompare}
+        onSelectProduct={(p) => {
+          setIsComparisonOpen(false);
+          setSelectedProduct(p);
+        }}
       />
     </main>
   );
