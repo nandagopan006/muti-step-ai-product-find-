@@ -9,6 +9,7 @@ import ProductDetailModal from './components/ProductDetailModal';
 import FavoritesModal from './components/FavoritesModal';
 import CompareBar from './components/CompareBar';
 import ComparisonModal from './components/ComparisonModal';
+import ChatHistory from './components/ChatHistory';
 import { searchProducts } from './services/api';
 
 const RECENT_SEARCHES_KEY = 'ai_recent_searches';
@@ -32,6 +33,9 @@ export default function App() {
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
   const comparedProductIds = new Set(comparedProducts.map((p) => p.id));
+
+  // Conversation history (session-based, resets on refresh)
+  const [conversations, setConversations] = useState([]);
 
   // Recent Searches state
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -148,6 +152,21 @@ export default function App() {
     try {
       const data = await searchProducts(textToSearch);
       setSearchResult(data);
+
+      // Append this turn to conversation history
+      setConversations((prev) => [
+        ...prev,
+        {
+          query: textToSearch,
+          answer: data.answer,
+          filtersUsed: data.filters_used || {},
+          productCount: data.products?.length || 0,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        },
+      ]);
     } catch (err) {
       setErrorMessage(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -190,6 +209,18 @@ export default function App() {
             Consulting AI & checking catalog specifications...
           </p>
         </div>
+      )}
+
+      {/* Previous conversation turns */}
+      {conversations.length > 1 && (
+        <ChatHistory
+          conversations={conversations.slice(0, -1)}
+          onClear={() => setConversations((prev) => prev.slice(-1))}
+          onSelectQuery={(q) => {
+            setQuery(q);
+            handleSearch(q);
+          }}
+        />
       )}
 
       {searchResult && (
