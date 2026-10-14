@@ -97,3 +97,12 @@ OPENROUTER_MODEL = config(
     "OPENROUTER_MODEL",
     default="meta-llama/llama-3.3-70b-instruct",
 )
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "ai-product-search-cache",
+        "TIMEOUT": 600,
+    }
+}
+

@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock
 import requests
 from django.test import TestCase
 from django.conf import settings
+from django.core.cache import cache
 from rest_framework.test import APIClient
 from rest_framework import status
 
@@ -515,4 +516,100 @@ class ProductSearchAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertFalse(response.data["success"])
         self.assertEqual(response.data["error"]["message"], "An unexpected error occurred. Please try again.")
+
+
+class SearchCachingTests(TestCase):
+    """Verifies that search queries are correctly cached to reduce latency and API calls."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.url = "/api/products/search/"
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    @patch("products.views.run_product_search_workflow")
+    def test_first_search_is_cache_miss_and_sets_cache(self, mock_workflow):
+        """First search request should miss cache, execute workflow, and return cached=False."""
+        mock_workflow.return_value = {
+            "answer": "Here is a laptop.",
+            "products": [{"id": "p1", "name": "Laptop Pro", "price": 50000}],
+            "search_performed": True,
+            "filters_used": {"category": "laptops"},
+        }
+
+        response = self.client.post(self.url, {"message": "best laptop"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["success"])
+        self.assertFalse(response.data["data"]["cached"])
+        self.assertEqual(mock_workflow.call_count, 1)
+
+    @patch("products.views.run_product_search_workflow")
+    def test_subsequent_identical_search_hits_cache(self, mock_workflow):
+        """Subsequent search with identical query hits cache and avoids re-executing workflow."""
+        mock_workflow.return_value = {
+            "answer": "Here is a laptop.",
+            "products": [{"id": "p1", "name": "Laptop Pro", "price": 50000}],
+            "search_performed": True,
+            "filters_used": {"category": "laptops"},
+        }
+
+        # First request
+        resp1 = self.client.post(self.url, {"message": "best laptop"}, format="json")
+        self.assertFalse(resp1.data["data"]["cached"])
+        self.assertEqual(mock_workflow.call_count, 1)
+
+        # Second request (identical query)
+        resp2 = self.client.post(self.url, {"message": "best laptop"}, format="json")
+        self.assertEqual(resp2.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp2.data["success"])
+        self.assertTrue(resp2.data["data"]["cached"])
+        self.assertEqual(resp2.data["data"]["answer"], "Here is a laptop.")
+        self.assertEqual(len(resp2.data["data"]["products"]), 1)
+        # Workflow was NOT called a second time
+        self.assertEqual(mock_workflow.call_count, 1)
+
+    @patch("products.views.run_product_search_workflow")
+    def test_cache_normalizes_case_and_whitespace(self, mock_workflow):
+        """Cache keys should normalize surrounding whitespace and casing."""
+        mock_workflow.return_value = {
+            "answer": "Smartphone options.",
+            "products": [],
+            "search_performed": True,
+            "filters_used": {},
+        }
+
+        # First request: "  Budget Phone  "
+        self.client.post(self.url, {"message": "  Budget Phone  "}, format="json")
+        self.assertEqual(mock_workflow.call_count, 1)
+
+        # Second request: "budget phone" (lowercase, no trailing spaces)
+        resp2 = self.client.post(self.url, {"message": "budget phone"}, format="json")
+        self.assertTrue(resp2.data["data"]["cached"])
+        self.assertEqual(mock_workflow.call_count, 1)
+
+    @patch("products.views.run_product_search_workflow")
+    def test_failed_search_does_not_cache(self, mock_workflow):
+        """Errors should not be cached, allowing subsequent retries to attempt workflow execution."""
+        mock_workflow.side_effect = OpenRouterTimeoutError("Timed out")
+
+        # Failed request
+        resp1 = self.client.post(self.url, {"message": "fail query"}, format="json")
+        self.assertEqual(resp1.status_code, status.HTTP_504_GATEWAY_TIMEOUT)
+
+        # Fix mock for retry
+        mock_workflow.side_effect = None
+        mock_workflow.return_value = {
+            "answer": "Recovered response",
+            "products": [],
+            "search_performed": False,
+            "filters_used": {},
+        }
+
+        # Second request should not be cached
+        resp2 = self.client.post(self.url, {"message": "fail query"}, format="json")
+        self.assertEqual(resp2.status_code, status.HTTP_200_OK)
+        self.assertFalse(resp2.data["data"]["cached"])
+
 
