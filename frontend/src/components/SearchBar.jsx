@@ -14,6 +14,8 @@ export default function SearchBar({
   isLoading,
   validationError,
   setValidationError,
+  recentSearches = [],
+  onClearRecentSearches,
 }) {
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,10 +27,10 @@ export default function SearchBar({
     onSearch(query);
   };
 
-  const handleExampleClick = (example) => {
-    setQuery(example);
+  const handleQueryClick = (text) => {
+    setQuery(text);
     setValidationError('');
-    onSearch(example);
+    onSearch(text);
   };
 
   const handleChange = (e) => {
@@ -72,15 +74,46 @@ export default function SearchBar({
         </div>
       </form>
 
+      {/* Recent Searches (if any) */}
+      {recentSearches.length > 0 && (
+        <div className="recent-searches">
+          <div className="recent-searches-header">
+            <span className="recent-searches-label">🕒 Recent:</span>
+            <button
+              type="button"
+              className="btn-clear-recent"
+              onClick={onClearRecentSearches}
+              title="Clear recent searches"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="example-chips">
+            {recentSearches.map((item, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className="example-chip recent-chip"
+                onClick={() => handleQueryClick(item)}
+                disabled={isLoading}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Suggested Queries */}
       <div className="example-queries">
-        <span className="example-queries-label">Try asking:</span>
+        <span className="example-queries-label">💡 Try asking:</span>
         <div className="example-chips">
           {EXAMPLE_QUERIES.map((example) => (
             <button
               key={example}
               type="button"
               className="example-chip"
-              onClick={() => handleExampleClick(example)}
+              onClick={() => handleQueryClick(example)}
               disabled={isLoading}
             >
               {example}
