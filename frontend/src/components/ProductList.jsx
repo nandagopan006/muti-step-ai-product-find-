@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import ProductCard from './ProductCard';
+import { exportProductsToCSV, copySearchSummaryToClipboard } from '../utils/exportUtils';
 
 export default function ProductList({
   products,
@@ -8,6 +9,9 @@ export default function ProductList({
   onToggleFavorite,
   comparedProductIds = new Set(),
   onToggleCompare,
+  query = '',
+  answer = '',
+  onToast,
 }) {
   const [sortBy, setSortBy] = useState('relevance');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -57,6 +61,20 @@ export default function ProductList({
 
   if (!products || products.length === 0) return null;
 
+  const handleExportCSV = () => {
+    exportProductsToCSV(processedProducts, query);
+    if (onToast) {
+      onToast(`Exported ${processedProducts.length} products to CSV! 📥`);
+    }
+  };
+
+  const handleShareSummary = async () => {
+    const success = await copySearchSummaryToClipboard(query, answer, processedProducts);
+    if (success && onToast) {
+      onToast('Copied search summary to clipboard! 📋');
+    }
+  };
+
   return (
     <section className="products-section" aria-label="Matching Products">
       <div className="results-toolbar">
@@ -70,20 +88,41 @@ export default function ProductList({
         </div>
 
         <div className="toolbar-right">
-          <label htmlFor="product-sort" className="sort-label">
-            Sort by:
-          </label>
-          <select
-            id="product-sort"
-            className="sort-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="relevance">AI Recommendation</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
-            <option value="rating_desc">Highest Rated (★)</option>
-          </select>
+          <div className="toolbar-actions">
+            <button
+              type="button"
+              className="btn-toolbar-action"
+              onClick={handleExportCSV}
+              title="Download products as CSV spreadsheet"
+            >
+              📥 Export CSV
+            </button>
+            <button
+              type="button"
+              className="btn-toolbar-action"
+              onClick={handleShareSummary}
+              title="Copy formatted AI recommendation & products to clipboard"
+            >
+              📋 Share
+            </button>
+          </div>
+
+          <div className="sort-group">
+            <label htmlFor="product-sort" className="sort-label">
+              Sort by:
+            </label>
+            <select
+              id="product-sort"
+              className="sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="relevance">AI Recommendation</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="rating_desc">Highest Rated (★)</option>
+            </select>
+          </div>
         </div>
       </div>
 

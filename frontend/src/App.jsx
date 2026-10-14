@@ -10,6 +10,7 @@ import FavoritesModal from './components/FavoritesModal';
 import CompareBar from './components/CompareBar';
 import ComparisonModal from './components/ComparisonModal';
 import ChatHistory from './components/ChatHistory';
+import Toast from './components/Toast';
 import { searchProducts } from './services/api';
 
 const RECENT_SEARCHES_KEY = 'ai_recent_searches';
@@ -33,6 +34,9 @@ export default function App() {
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
   const comparedProductIds = new Set(comparedProducts.map((p) => p.id));
+
+  // Toast notification state
+  const [toastMessage, setToastMessage] = useState('');
 
   // Conversation history (session-based, resets on refresh)
   const [conversations, setConversations] = useState([]);
@@ -239,6 +243,9 @@ export default function App() {
             onToggleFavorite={handleToggleFavorite}
             comparedProductIds={comparedProductIds}
             onToggleCompare={handleToggleCompare}
+            query={lastQuery || query}
+            answer={searchResult.answer}
+            onToast={(msg) => setToastMessage(msg)}
           />
         </>
       )}
@@ -284,6 +291,9 @@ export default function App() {
           setSelectedProduct(p);
         }}
       />
+
+      {/* Toast Notifications */}
+      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
     </main>
   );
 }
