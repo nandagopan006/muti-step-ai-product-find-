@@ -340,6 +340,13 @@ body {
   border-bottom: 1px solid var(--border-subtle);
 }
 
+.ai-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
 .ai-badge {
   display: inline-flex;
   align-items: center;
@@ -353,6 +360,21 @@ body {
   border-radius: var(--radius-full);
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+
+.cached-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  padding: 0.22rem 0.6rem;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.02em;
+  animation: fadeIn 0.3s ease;
 }
 
 .filters-badge-group {

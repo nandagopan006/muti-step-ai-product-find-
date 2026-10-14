@@ -228,6 +228,8 @@ export default function App() {
           <AiAnswer
             answer={searchResult.answer}
             filtersUsed={searchResult.filters_used}
+            searchPerformed={searchResult.search_performed}
+            cached={searchResult.cached}
           />
 
           <ProductList

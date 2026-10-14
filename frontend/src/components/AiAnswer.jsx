@@ -41,7 +41,7 @@ function renderFormattedMarkdown(text) {
   });
 }
 
-export default function AiAnswer({ answer, filtersUsed, searchPerformed }) {
+export default function AiAnswer({ answer, filtersUsed, searchPerformed, cached }) {
   if (!answer) return null;
 
   const filterEntries = filtersUsed ? Object.entries(filtersUsed) : [];
@@ -49,9 +49,20 @@ export default function AiAnswer({ answer, filtersUsed, searchPerformed }) {
   return (
     <section className="ai-answer-card" aria-label="AI Search Summary">
       <div className="ai-answer-header">
-        <div className="ai-badge">
-          <span>✨</span>
-          <span>AI Recommendation</span>
+        <div className="ai-header-left">
+          <div className="ai-badge">
+            <span>✨</span>
+            <span>AI Recommendation</span>
+          </div>
+
+          {cached && (
+            <span
+              className="cached-pill"
+              title="Served instantly from high-speed in-memory cache"
+            >
+              ⚡ Cached (0ms)
+            </span>
+          )}
         </div>
 
         {searchPerformed && filterEntries.length > 0 && (
