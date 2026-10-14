@@ -6,6 +6,8 @@ export default function ProductList({
   onOpenDetails,
   favoriteIds = new Set(),
   onToggleFavorite,
+  comparedProductIds = new Set(),
+  onToggleCompare,
 }) {
   const [sortBy, setSortBy] = useState('relevance');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -121,6 +123,8 @@ export default function ProductList({
             onOpenDetails={onOpenDetails}
             isFavorite={favoriteIds.has(product.id)}
             onToggleFavorite={onToggleFavorite}
+            isCompared={comparedProductIds.has(product.id)}
+            onToggleCompare={onToggleCompare}
           />
         ))}
       </div>

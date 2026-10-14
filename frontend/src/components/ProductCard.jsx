@@ -12,6 +12,8 @@ export default function ProductCard({
   onOpenDetails,
   isFavorite = false,
   onToggleFavorite,
+  isCompared = false,
+  onToggleCompare,
 }) {
   const [imageError, setImageError] = useState(false);
 
@@ -109,10 +111,20 @@ export default function ProductCard({
 
         <div className="product-card-footer">
           <button
+            type="button"
+            className={`btn-card-compare ${isCompared ? 'active' : ''}`}
+            onClick={() => onToggleCompare?.(product)}
+            title={isCompared ? 'Remove from compare' : 'Add to compare'}
+          >
+            {isCompared ? '✓ Comparing' : '+ Compare'}
+          </button>
+
+          <button
+            type="button"
             className="btn-quick-view"
             onClick={() => onOpenDetails?.(product)}
           >
-            View Details 🔍
+            Details 🔍
           </button>
         </div>
       </div>
