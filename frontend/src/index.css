@@ -506,7 +506,6 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
 }
 
 .chips-label {
@@ -536,6 +535,114 @@ body {
   border-color: #6366f1;
   color: #a5b4fc;
   font-weight: 600;
+}
+
+/* Filter controls row containing chips and price slider */
+.filter-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Price Range Slider Panel */
+.price-slider-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-md, 10px);
+  min-width: 280px;
+  flex-grow: 1;
+  max-width: 380px;
+}
+
+.price-slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.slider-label {
+  font-size: 0.775rem;
+  color: #cbd5e1;
+}
+
+.slider-label strong {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.price-reset-btn {
+  background: transparent;
+  border: none;
+  color: #f87171;
+  font-size: 0.725rem;
+  cursor: pointer;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  text-decoration: underline;
+  transition: opacity 0.15s ease;
+}
+
+.price-reset-btn:hover {
+  opacity: 0.8;
+}
+
+.slider-track-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.slider-bound {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.price-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.price-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 2px solid #0f172a;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.price-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.price-range-slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 2px solid #0f172a;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+  cursor: pointer;
 }
 
 /* Toast Notification */
@@ -677,12 +784,32 @@ body {
   line-height: 1.35;
 }
 
+.product-price-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
 .product-price {
   font-size: 1.2rem;
   font-weight: 700;
   color: #ffffff;
-  margin-bottom: 0.65rem;
   letter-spacing: -0.02em;
+}
+
+.budget-fit-badge {
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
 }
 
 .product-description {

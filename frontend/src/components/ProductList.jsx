@@ -12,9 +12,27 @@ export default function ProductList({
   query = '',
   answer = '',
   onToast,
+  budget = null,
 }) {
   const [sortBy, setSortBy] = useState('relevance');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Compute min and max prices from the current product results
+  const { minPricePossible, maxPricePossible } = useMemo(() => {
+    if (!products || products.length === 0) return { minPricePossible: 0, maxPricePossible: 0 };
+    const validPrices = products
+      .map((p) => p.price)
+      .filter((pr) => typeof pr === 'number' && !isNaN(pr));
+    if (validPrices.length === 0) return { minPricePossible: 0, maxPricePossible: 0 };
+    return {
+      minPricePossible: Math.min(...validPrices),
+      maxPricePossible: Math.max(...validPrices),
+    };
+  }, [products]);
+
+  // User interactive price filter state
+  const [priceCap, setPriceCap] = useState(null);
+  const currentMaxPrice = priceCap !== null ? priceCap : maxPricePossible;
 
   // Dynamically extract unique categories present in the current results
   const categories = useMemo(() => {
@@ -39,6 +57,11 @@ export default function ProductList({
       );
     }
 
+    // Filter by user interactive price slider
+    if (priceCap !== null) {
+      list = list.filter((p) => (p.price || 0) <= priceCap);
+    }
+
     // Sort products
     switch (sortBy) {
       case 'price_asc':
@@ -57,7 +80,7 @@ export default function ProductList({
     }
 
     return list;
-  }, [products, sortBy, selectedCategory]);
+  }, [products, sortBy, selectedCategory, priceCap]);
 
   if (!products || products.length === 0) return null;
 
@@ -84,6 +107,7 @@ export default function ProductList({
             {processedProducts.length}{' '}
             {processedProducts.length === 1 ? 'product' : 'products'}
             {selectedCategory !== 'all' && ` in ${selectedCategory}`}
+            {priceCap !== null && ` (≤ ₹${priceCap.toLocaleString('en-IN')})`}
           </span>
         </div>
 
@@ -126,32 +150,68 @@ export default function ProductList({
         </div>
       </div>
 
-      {/* Category Filter Chips (if more than 1 category in result) */}
-      {categories.length > 1 && (
-        <div className="category-filter-chips">
-          <span className="chips-label">Filter Category:</span>
-          <button
-            className={`filter-chip ${selectedCategory === 'all' ? 'active' : ''}`}
-            onClick={() => setSelectedCategory('all')}
-          >
-            All ({products.length})
-          </button>
-          {categories.map((cat) => {
-            const count = products.filter(
-              (p) => (p.category || '').toLowerCase() === cat
-            ).length;
-            return (
-              <button
-                key={cat}
-                className={`filter-chip ${selectedCategory === cat ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(cat)}
-              >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)} ({count})
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* Filter Panels: Category Chips & Interactive Price Slider */}
+      <div className="filter-controls-row">
+        {categories.length > 1 && (
+          <div className="category-filter-chips">
+            <span className="chips-label">Category:</span>
+            <button
+              className={`filter-chip ${selectedCategory === 'all' ? 'active' : ''}`}
+              onClick={() => setSelectedCategory('all')}
+            >
+              All ({products.length})
+            </button>
+            {categories.map((cat) => {
+              const count = products.filter(
+                (p) => (p.category || '').toLowerCase() === cat
+              ).length;
+              return (
+                <button
+                  key={cat}
+                  className={`filter-chip ${selectedCategory === cat ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Dynamic Price Range Slider */}
+        {maxPricePossible > minPricePossible && (
+          <div className="price-slider-panel">
+            <div className="price-slider-header">
+              <span className="slider-label">
+                💰 Max Price: <strong>₹{currentMaxPrice.toLocaleString('en-IN')}</strong>
+              </span>
+              {priceCap !== null && (
+                <button
+                  type="button"
+                  className="price-reset-btn"
+                  onClick={() => setPriceCap(null)}
+                >
+                  Reset Price
+                </button>
+              )}
+            </div>
+            <div className="slider-track-wrap">
+              <span className="slider-bound">₹{minPricePossible.toLocaleString('en-IN')}</span>
+              <input
+                type="range"
+                className="price-range-slider"
+                min={minPricePossible}
+                max={maxPricePossible}
+                step={500}
+                value={currentMaxPrice}
+                onChange={(e) => setPriceCap(Number(e.target.value))}
+                aria-label="Filter products by maximum price"
+              />
+              <span className="slider-bound">₹{maxPricePossible.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Product Cards Grid */}
       <div className="products-grid">
@@ -164,6 +224,7 @@ export default function ProductList({
             onToggleFavorite={onToggleFavorite}
             isCompared={comparedProductIds.has(product.id)}
             onToggleCompare={onToggleCompare}
+            budget={budget || (priceCap !== null ? priceCap : null)}
           />
         ))}
       </div>

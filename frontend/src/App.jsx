@@ -246,6 +246,7 @@ export default function App() {
             query={lastQuery || query}
             answer={searchResult.answer}
             onToast={(msg) => setToastMessage(msg)}
+            budget={searchResult.filters_used?.max_price || searchResult.filters_used?.price_max || null}
           />
         </>
       )}
