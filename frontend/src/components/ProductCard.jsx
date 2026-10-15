@@ -14,6 +14,7 @@ export default function ProductCard({
   onToggleFavorite,
   isCompared = false,
   onToggleCompare,
+  budget = null,
 }) {
   const [imageError, setImageError] = useState(false);
 
@@ -95,7 +96,19 @@ export default function ProductCard({
           {title}
         </h3>
 
-        <div className="product-price">{formatPrice(price)}</div>
+        <div className="product-price-row">
+          <div className="product-price">{formatPrice(price)}</div>
+          {budget && typeof price === 'number' && budget >= price && (
+            <span
+              className="budget-fit-badge"
+              title={`₹${(budget - price).toLocaleString('en-IN')} below budget`}
+            >
+              {budget - price > 0
+                ? `🎯 ₹${(budget - price).toLocaleString('en-IN')} under budget`
+                : '🎯 Exact budget'}
+            </span>
+          )}
+        </div>
 
         {description && <p className="product-description">{description}</p>}
 
